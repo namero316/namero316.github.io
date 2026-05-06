@@ -73,6 +73,9 @@ h1 {
     color: #fff;
 }
 
+.bonus-stat { color: #c084fc; }
+.bonus-stat b { color: #e879f9; }
+
 #generate-btn {
     display: block;
     width: 100%;
@@ -178,6 +181,44 @@ h1 {
     color: rgba(255,255,255,0.85);
     font-weight: bold;
     flex-shrink: 0;
+}
+
+.separator {
+    color: rgba(255,255,255,0.4);
+    font-size: 1.4rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    flex-shrink: 0;
+}
+
+.bonus-ball {
+    box-shadow: 0 0 0 3px #e879f9, 0 4px 16px rgba(232,121,249,0.4);
+}
+
+.tab-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.tab-btn.active {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border-color: rgba(255,255,255,0.4);
 }
 
 .info-box {

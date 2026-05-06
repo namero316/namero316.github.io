@@ -9,33 +9,60 @@ const FREQUENCY = {
   44:159, 45:170
 };
 
+// 1~1204회차 보너스 번호 출현 빈도
+const BONUS_FREQUENCY = {
+  1:32,  2:34,  3:31,  4:35,  5:25,  6:34,  7:32,  8:24,
+  9:25,  10:27, 11:25, 12:27, 13:27, 14:22, 15:25,
+  16:28, 17:33, 18:19, 19:22, 20:29, 21:25, 22:20,
+  23:20, 24:32, 25:20, 26:31, 27:31, 28:25, 29:17,
+  30:32, 31:30, 32:34, 33:31, 34:23, 35:30, 36:24,
+  37:26, 38:30, 39:24, 40:22, 41:17, 42:25, 43:35,
+  44:24, 45:20
+};
+
 const TOTAL_DRAWS = 1204;
-
-// 누적 가중치 테이블 생성
 const NUMBERS = Object.keys(FREQUENCY).map(Number);
-const WEIGHTS = NUMBERS.map(n => FREQUENCY[n]);
-const CUMULATIVE = [];
-let sum = 0;
-for (const w of WEIGHTS) {
-  sum += w;
-  CUMULATIVE.push(sum);
-}
-const TOTAL_WEIGHT = sum;
 
-function weightedRandom() {
-  const r = Math.random() * TOTAL_WEIGHT;
-  for (let i = 0; i < CUMULATIVE.length; i++) {
-    if (r < CUMULATIVE[i]) return NUMBERS[i];
+function buildCumulative(freq) {
+  const nums = Object.keys(freq).map(Number);
+  const cumul = [];
+  let total = 0;
+  for (const n of nums) {
+    total += freq[n];
+    cumul.push({ n, c: total });
   }
-  return NUMBERS[NUMBERS.length - 1];
+  return { cumul, total };
 }
 
-function generateWeightedLotto() {
+const main = buildCumulative(FREQUENCY);
+const bonus = buildCumulative(BONUS_FREQUENCY);
+
+function weightedPick(table, exclude = new Set()) {
+  // exclude된 번호를 제외한 부분 가중치로 다시 뽑기
+  const eligible = table.cumul.filter(({ n }) => !exclude.has(n));
+  const total = eligible.reduce((s, { n }) => s + FREQUENCY[n] || BONUS_FREQUENCY[n], 0);
+  // 단순히 eligible 목록에서 각자 빈도 비중으로 뽑기
+  let sum = 0;
+  const weights = eligible.map(({ n }) => {
+    const w = table === main ? FREQUENCY[n] : BONUS_FREQUENCY[n];
+    sum += w;
+    return { n, w };
+  });
+  const r = Math.random() * sum;
+  let acc = 0;
+  for (const { n, w } of weights) {
+    acc += w;
+    if (r < acc) return n;
+  }
+  return weights[weights.length - 1].n;
+}
+
+function generateLotto() {
   const picked = new Set();
-  while (picked.size < 6) {
-    picked.add(weightedRandom());
-  }
-  return Array.from(picked).sort((a, b) => a - b);
+  while (picked.size < 6) picked.add(weightedPick(main, new Set()));
+  const numbers = Array.from(picked).sort((a, b) => a - b);
+  const bonusNum = weightedPick(bonus, picked);
+  return { numbers, bonusNum };
 }
 
 function getBallColor(n) {
@@ -48,10 +75,12 @@ function getBallColor(n) {
 
 const generateBtn = document.getElementById('generate-btn');
 const numberElements = document.querySelectorAll('.number');
+const bonusEl = document.getElementById('bonus-number');
 const statsEl = document.getElementById('stats');
 
 generateBtn.addEventListener('click', () => {
-  const numbers = generateWeightedLotto();
+  const { numbers, bonusNum } = generateLotto();
+  const all = numbers.length + 2; // 6 main + separator delay + bonus
 
   numberElements.forEach((el, i) => {
     setTimeout(() => {
@@ -63,13 +92,22 @@ generateBtn.addEventListener('click', () => {
     }, i * 180);
   });
 
-  // 선택된 번호의 확률 표시
+  // 보너스 번호 — 메인 6개 다 나온 뒤에 등장
   setTimeout(() => {
-    const probs = numbers.map(n => ((FREQUENCY[n] / (TOTAL_DRAWS * 6)) * 100).toFixed(2));
-    statsEl.innerHTML = numbers.map((n, i) =>
-      `<span><b>${n}번</b> ${probs[i]}%</span>`
-    ).join(' · ');
-  }, numbers.length * 180 + 100);
+    bonusEl.textContent = bonusNum;
+    bonusEl.style.background = getBallColor(bonusNum);
+    bonusEl.style.transform = 'scale(1.15)';
+    setTimeout(() => { bonusEl.style.transform = 'scale(1)'; }, 300);
+  }, 6 * 180 + 300);
+
+  // 확률 표시
+  setTimeout(() => {
+    const mainProbs = numbers.map(n => ((FREQUENCY[n] / (TOTAL_DRAWS * 6)) * 100).toFixed(2));
+    const bonusProb = ((BONUS_FREQUENCY[bonusNum] / TOTAL_DRAWS) * 100).toFixed(2);
+    statsEl.innerHTML =
+      mainProbs.map((p, i) => `<span><b>${numbers[i]}번</b> ${p}%</span>`).join(' · ') +
+      `<span class="bonus-stat"> · <b>보너스 ${bonusNum}번</b> ${bonusProb}%</span>`;
+  }, all * 180 + 400);
 });
 
 // 상위/하위 번호 초기 표시
@@ -83,21 +121,24 @@ if (botEl) botEl.textContent = sorted.slice(-5).reverse().join(', ');
 const statsBtn = document.getElementById('stats-btn');
 const statsTable = document.getElementById('stats-table');
 let tableVisible = false;
+let currentTab = 'main'; // 'main' | 'bonus'
 
-statsBtn.addEventListener('click', () => {
-  tableVisible = !tableVisible;
-  statsBtn.textContent = tableVisible ? '통계 닫기' : '번호별 출현 통계 보기';
+function renderTable(tab) {
+  const freq = tab === 'main' ? FREQUENCY : BONUS_FREQUENCY;
+  const denom = tab === 'main' ? TOTAL_DRAWS * 6 : TOTAL_DRAWS;
+  const sortedNums = [...NUMBERS].sort((a, b) => freq[b] - freq[a]);
+  const maxFreq = freq[sortedNums[0]];
 
-  if (!tableVisible) {
-    statsTable.classList.add('hidden');
-    return;
-  }
+  const tabHtml = `
+    <div class="tab-row">
+      <button class="tab-btn ${tab === 'main' ? 'active' : ''}" data-tab="main">당첨 번호</button>
+      <button class="tab-btn ${tab === 'bonus' ? 'active' : ''}" data-tab="bonus">보너스 번호</button>
+    </div>`;
 
-  const maxFreq = FREQUENCY[sorted[0]];
-  const rows = sorted.map((n, rank) => {
-    const freq = FREQUENCY[n];
-    const prob = ((freq / (TOTAL_DRAWS * 6)) * 100).toFixed(2);
-    const barWidth = Math.round((freq / maxFreq) * 100);
+  const rows = sortedNums.map((n, rank) => {
+    const f = freq[n];
+    const prob = ((f / denom) * 100).toFixed(2);
+    const barWidth = Math.round((f / maxFreq) * 100);
     const color = getBallColor(n);
     return `
       <div class="stat-row">
@@ -106,11 +147,28 @@ statsBtn.addEventListener('click', () => {
         <div class="stat-bar-wrap">
           <div class="stat-bar" style="width:${barWidth}%;background:${color}"></div>
         </div>
-        <span class="stat-count">${freq}회</span>
+        <span class="stat-count">${f}회</span>
         <span class="stat-prob">${prob}%</span>
       </div>`;
   }).join('');
 
-  statsTable.innerHTML = rows;
-  statsTable.classList.remove('hidden');
+  statsTable.innerHTML = tabHtml + rows;
+
+  statsTable.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentTab = btn.dataset.tab;
+      renderTable(currentTab);
+    });
+  });
+}
+
+statsBtn.addEventListener('click', () => {
+  tableVisible = !tableVisible;
+  statsBtn.textContent = tableVisible ? '통계 닫기' : '번호별 출현 통계 보기';
+  if (!tableVisible) {
+    statsTable.classList.add('hidden');
+  } else {
+    renderTable(currentTab);
+    statsTable.classList.remove('hidden');
+  }
 });
