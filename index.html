@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lotto Number Generator</title>
-    <link href='style.css?v=1.1' rel='stylesheet'>
+    <title>로또 번호 생성기</title>
+    <link href='style.css?v=2.0' rel='stylesheet'>
 </head>
 <body>
     <div class="lotto-machine">
-        <h1>Lotto Number Generator</h1>
+        <h1>로또 번호 생성기</h1>
+        <p class="subtitle">1~1204회차 실제 당첨 데이터 기반 확률 적용</p>
+
         <div class="lotto-numbers">
             <span class="number"></span>
             <span class="number"></span>
@@ -17,8 +19,26 @@
             <span class="number"></span>
             <span class="number"></span>
         </div>
-        <button id="generate-btn">Generate Numbers</button>
+
+        <div id="stats" class="stats"></div>
+
+        <button id="generate-btn">번호 생성</button>
+
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label">많이 나온 번호 TOP 5</span>
+                <span id="top-numbers" class="info-value hot"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">적게 나온 번호 TOP 5</span>
+                <span id="bot-numbers" class="info-value cold"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">분석 데이터</span>
+                <span class="info-value">1~1204회차 · 2002.12.07 ~ 2025.12.27</span>
+            </div>
+        </div>
     </div>
-    <script defer type="text/javascript" src="main.js?v=1.1"></script>
+    <script defer type="text/javascript" src="main.js?v=2.0"></script>
 </body>
 </html>
