@@ -78,3 +78,39 @@ const topEl = document.getElementById('top-numbers');
 const botEl = document.getElementById('bot-numbers');
 if (topEl) topEl.textContent = sorted.slice(0, 5).join(', ');
 if (botEl) botEl.textContent = sorted.slice(-5).reverse().join(', ');
+
+// 번호별 출현 통계 테이블
+const statsBtn = document.getElementById('stats-btn');
+const statsTable = document.getElementById('stats-table');
+let tableVisible = false;
+
+statsBtn.addEventListener('click', () => {
+  tableVisible = !tableVisible;
+  statsBtn.textContent = tableVisible ? '통계 닫기' : '번호별 출현 통계 보기';
+
+  if (!tableVisible) {
+    statsTable.classList.add('hidden');
+    return;
+  }
+
+  const maxFreq = FREQUENCY[sorted[0]];
+  const rows = sorted.map((n, rank) => {
+    const freq = FREQUENCY[n];
+    const prob = ((freq / (TOTAL_DRAWS * 6)) * 100).toFixed(2);
+    const barWidth = Math.round((freq / maxFreq) * 100);
+    const color = getBallColor(n);
+    return `
+      <div class="stat-row">
+        <span class="stat-rank">${rank + 1}</span>
+        <span class="stat-ball" style="background:${color}">${n}</span>
+        <div class="stat-bar-wrap">
+          <div class="stat-bar" style="width:${barWidth}%;background:${color}"></div>
+        </div>
+        <span class="stat-count">${freq}회</span>
+        <span class="stat-prob">${prob}%</span>
+      </div>`;
+  }).join('');
+
+  statsTable.innerHTML = rows;
+  statsTable.classList.remove('hidden');
+});
