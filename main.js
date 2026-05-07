@@ -197,11 +197,6 @@ function launchCelebration() {
     void flash.offsetWidth;
     flash.classList.add('flash');
 
-    // Win banner
-    const banner = document.getElementById('win-banner');
-    banner.classList.remove('show');
-    void banner.offsetWidth;
-    banner.classList.add('show');
 }
 
 function drawConfetti() {
