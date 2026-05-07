@@ -4,9 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>로또 번호 생성기</title>
-    <link href='style.css?v=2.2' rel='stylesheet'>
+    <link href='style.css?v=3.0' rel='stylesheet'>
 </head>
 <body>
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="screen-flash"></div>
+    <div id="win-banner">
+        <span class="win-emoji">🎊</span>
+        <span class="win-title">행운의 번호!</span>
+        <span class="win-emoji">🎊</span>
+    </div>
+
     <div class="lotto-machine">
         <h1>로또 번호 생성기</h1>
         <p class="subtitle">1~1204회차 실제 당첨 데이터 기반 확률 적용</p>
@@ -44,6 +53,6 @@
             </div>
         </div>
     </div>
-    <script defer type="text/javascript" src="main.js?v=2.2"></script>
+    <script defer type="text/javascript" src="main.js?v=3.0"></script>
 </body>
 </html>
